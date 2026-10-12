@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Magic Math 3.0 - Chinh Phục Số Thập Phân Cùng Thầy Sơn Tùng</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #1a1a2e; --cam-dat: #c1791a; --xanh-duong: #0f3460;
+            --xanh-la: #27ae60; --do-baodong: #e94560; --vang-chanh: #f1c40f;
+            --chalk-board: #16213e; --magic-glow: #e056fd;
+        }
+
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: var(--navy); font-family: 'Nunito', sans-serif; color: #fff; touch-action: none; }
+
+        /* --- BẦU TRỜI VÔ CỰC & PARALLAX --- */
+        #game-container {
+            position: relative; width: 100vw; height: 100vh;
+            background: linear-gradient(180deg, #0f3460 0%, #1a1a2e 100%);
+            display: flex; flex-direction: column; overflow: hidden;
+            transition: background 1s ease-in-out;
+        }
+        
+        .parallax-bg {
+            position: absolute; top: 0; left: 0; width: 200%; height: 100%;
+            background-image: radial-gradient(circle at center, rgba(255,255,255,0.1) 2px, transparent 2px);
+            background-size: 60px 60px;
+            animation: moveParallax 20s linear infinite;
+            z-index: 1; pointer-events: none;
+        }
+        @keyframes moveParallax { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        /* Hiệu ứng rung lắc khi trả lời sai */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shake-active { animation: shake 0.4s; }
+
+        /* --- SCREENS --- */
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 30; padding: 20px;
+        }
+        .screen.hidden { display: none !important; }
+
+        /* MÀN HÌNH CHÍNH (MAIN MENU) */
+        #start-screen { background: radial-gradient(circle, rgba(15, 52, 96, 0.9) 0%, rgba(26, 26, 46, 0.98) 100%); }
+        
+        .hero-avatar {
+            width: 160px; height: 160px; border-radius: 50%; border: 4px solid var(--magic-glow);
+            box-shadow: 0 0 35px rgba(224, 86, 253, 0.7); object-fit: cover; margin-bottom: 25px;
+            animation: floatAvatar 3s ease-in-out infinite; background-color: #fff;
+        }
+        @keyframes floatAvatar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        .typewriter-intro {
+            font-size: 1.6rem; color: var(--vang-chanh); font-weight: 800; text-align: center;
+            min-height: 90px; max-width: 650px; margin-bottom: 40px; text-shadow: 2px 2px 5px rgba(0,0,0,0.9); line-height: 1.5;
+        }
+
+        .btn-start-fly {
+            padding: 22px 60px; font-size: 2.2rem; font-weight: 900; background: linear-gradient(45deg, #e056fd, #e94560);
+            color: #fff; border: none; border-radius: 50px; cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(224, 86, 253, 0.8); transition: all 0.3s ease; animation: pulseBtn 1.5s infinite alternate;
+        }
+        .btn-start-fly:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(224, 86, 253, 1); }
+        @keyframes pulseBtn { 0% { box-shadow: 0 0 20px rgba(224, 86, 253, 0.6); } 100% { box-shadow: 0 0 45px rgba(224, 86, 253, 1); } }
+
+        .btn-mode {
+            padding: 16px 35px; font-size: 1.2rem; font-weight: 800; border: none; border-radius: 50px;
+            cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 10px; margin: 10px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4); text-transform: uppercase;
+        }
+        .btn-classroom { background: var(--xanh-la); color: #fff; }
+        .btn-classroom:hover { background: #219150; transform: scale(1.05) translateY(-3px); }
+        .btn-survival { background: var(--do-baodong); color: #fff; }
+        .btn-survival:hover { background: #c0392b; transform: scale(1.05) translateY(-3px); }
+
+        .btn-guide-corner {
+            position: absolute; bottom: 30px; right: 30px; padding: 12px 25px; font-size: 1.1rem;
+            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 30px;
+            color: #fff; cursor: pointer; font-weight: 800; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .btn-guide-corner:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
+
+        /* CUỘN GIẤY DA (PARCHMENT MODAL) */
+        .parchment {
+            background: url('https://www.transparenttextures.com/patterns/aged-paper.png'), #f4d092;
+            border: 5px solid #8b5a2b; border-radius: 8px; box-shadow: inset 0 0 40px rgba(139,90,43,0.8), 0 15px 40px rgba(0,0,0,0.9);
+            color: #4a2e15; padding: 45px; max-width: 750px; width: 90%; text-align: left; position: relative;
+        }
+        .parchment h2 { text-align: center; font-family: 'Patrick Hand', cursive; font-size: 2.8rem; border-bottom: 3px dashed #8b5a2b; padding-bottom: 15px; margin-bottom: 25px; color: #5c3a21; }
+        .parchment p { font-size: 1.25rem; font-weight: 800; margin-bottom: 18px; line-height: 1.6; }
+        .btn-close-parchment {
+            position: absolute; top: 15px; right: 15px; background: #e74c3c; color: white; border: 3px solid #c0392b; font-size: 1.5rem;
+            width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-weight: 900; transition: transform 0.2s;
+        }
+        .btn-close-parchment:hover { transform: scale(1.1) rotate(90deg); }
+
+        /* KHUNG HỘI THOẠI CHUYỂN CẢNH (DIALOGUE BOX) */
+        #dialogue-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 28;
+            background: transparent; 
+            display: flex; align-items: flex-end; 
+            justify-content: center; padding-bottom: 40px;
+            pointer-events: none; 
+            transition: opacity 0.5s ease;
+            opacity: 1;
+        }
+        #dialogue-overlay.hidden { 
+            opacity: 0; 
+            pointer-events: none; 
+        }
+        .dialogue-box {
+            background: rgba(22, 33, 62, 0.95); border: 4px solid var(--magic-glow); border-radius: 25px;
+            padding: 30px; max-width: 750px; width: 90%; display: flex; align-items: center; gap: 25px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.9); transform: translateY(50px); opacity: 0; animation: slideUp 0.5s forwards;
+            pointer-events: auto;
+        }
+        .dialogue-box.fade-out {
+            animation: slideDownFade 0.5s forwards;
+        }
+        @keyframes slideUp { to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideDownFade { to { transform: translateY(50px); opacity: 0; } }
+        .dialogue-avatar { width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--vang-chanh); object-fit: cover; background-color: #fff; }
+        .dialogue-content { flex: 1; }
+        .dialogue-text { font-size: 1.4rem; color: #fff; font-weight: 800; line-height: 1.5; min-height: 90px; }
+        
+        .btn-continue {
+            margin-top: 20px; padding: 12px 30px; font-size: 1.3rem; background: var(--xanh-la); color: #fff;
+            border: 2px solid #fff; border-radius: 30px; cursor: pointer; font-weight: 900; float: right; animation: pulseBtn 1s infinite alternate; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.6);
+        }
+
+        /* HUD BAR & KHUNG HỎI CAO CẤP MỚI */
+        #hud-bar {
+            height: 105px; background: #0f3460; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; border-bottom: 3px solid var(--magic-glow); z-index: 5; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+        .hud-item { display: flex; flex-direction: column; align-items: center; min-width: 90px; }
+        .hud-label { font-size: 0.85rem; color: #bdc3c7; text-transform: uppercase; font-weight: 800; }
+        .hud-value { font-size: 1.9rem; font-weight: 900; color: var(--vang-chanh); }
+
+        /* CẢI TIẾN KHUNG CÂU HỎI HIỂN THỊ TO, RÕ, ĐẲNG CẤP */
+        #question-board {
+            flex: 1.5; margin: 0 15px; 
+            background: linear-gradient(135deg, #0b132b 0%, #1c2541 100%); 
+            border: 4px solid var(--vang-chanh);
+            border-radius: 18px; padding: 8px 20px; text-align: center; 
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.9), 0 0 25px rgba(241, 196, 15, 0.4);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative;
+            min-height: 80px;
+        }
+        #question-text { 
+            font-family: 'Patrick Hand', 'Nunito', sans-serif; 
+            font-size: 2.3rem; font-weight: 900;
+            color: #ffffff; 
+            text-shadow: 0 0 12px rgba(241, 196, 15, 0.6), 2px 2px 4px rgba(0,0,0,0.9); 
+            line-height: 1.25;
+            letter-spacing: 0.5px;
+        }
+        #round-indicator {
+            position: absolute; top: -16px; left: 20px; background: linear-gradient(45deg, var(--magic-glow), #e94560); padding: 4px 18px;
+            border-radius: 12px; font-size: 0.95rem; font-weight: 900; text-transform: uppercase; box-shadow: 0 3px 8px rgba(0,0,0,0.6);
+            border: 1px solid #fff;
+        }
+        #reading-alert {
+            position: absolute; top: -38px; color: #f1c40f; font-weight: 900; font-size: 1.3rem;
+            animation: bounce 0.5s infinite alternate; text-shadow: 0 0 10px #f1c40f, 0 0 20px #e74c3c; display: none;
+        }
+        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+
+        .hud-controls { display: flex; gap: 12px; }
+        .btn-icon {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff;
+            width: 50px; height: 50px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: background 0.2s;
+        }
+        #btn-audio { background: linear-gradient(135deg, #f39c12, #d35400); border: 2px solid #fff; box-shadow: 0 0 10px rgba(243, 156, 18, 0.6); }
+
+        /* CANVAS AREA */
+        #canvas-wrapper { position: relative; flex: 1; width: 100%; background: transparent; cursor: crosshair; }
+        canvas { display: block; width: 100%; height: 100%; }
+
+        /* MASCOT SPEECH BUBBLE */
+        #mascot-container {
+            position: absolute; bottom: 20px; left: 25px; display: flex; align-items: flex-end; gap: 15px; z-index: 10; pointer-events: none;
+        }
+        @keyframes fadeOutMascot {
+            to { transform: scale(0.8); opacity: 0; }
+        }
+        .speech-bubble {
+            background: #ffffff; color: #2c3e50; padding: 15px 25px; border-radius: 20px; border-bottom-left-radius: 2px;
+            font-weight: 900; font-size: 1.2rem; max-width: 350px; box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); line-height: 1.4;
+            display: none;
+        }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* END SCREEN MODALS */
+        .modal-box {
+            background: #1a1a2e; border: 3px solid var(--magic-glow); border-radius: 20px;
+            max-width: 850px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 30px; text-align: center; z-index: 50;
+        }
+        .modal-title { font-size: 2.2rem; color: var(--vang-chanh); margin-bottom: 20px; text-transform: uppercase; }
+        .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 1.1rem; }
+        .leaderboard-table th, .leaderboard-table td { padding: 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .name-input { padding: 12px 20px; font-size: 1.2rem; border-radius: 8px; border: 2px solid var(--magic-glow); width: 70%; margin-bottom: 15px; text-align: center; font-weight: bold; outline: none; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- HIỆU ỨNG BẦU TRỜI PARALLAX -->
+    <div class="parallax-bg"></div>
+
+    <!-- AUDIO ELEMENT -->
+    <audio id="bgm-audio" loop src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_5b331002dc.mp3?filename=fun-life-112188.mp3"></audio>
+
+    <!-- MÀN HÌNH CHÍNH (MAIN MENU) -->
+    <div id="start-screen" class="screen">
+        <img src="thay-son-tung.png" alt="Thầy Sơn Tùng" class="hero-avatar" onerror="this.src='https://via.placeholder.com/150?text=Thay+Tung'">
+        
+        <div class="typewriter-intro" id="intro-text"></div>
+        
+        <button class="btn-start-fly" id="btn-main-start" onclick="showModeSelection()">🚀 BẮT ĐẦU BAY</button>
+
+        <div id="mode-selection" class="hidden" style="margin-top: 20px; z-index: 10;">
+            <button class="btn-mode btn-classroom" onclick="startGame('CLASSROOM')">🏫 LỚP HỌC (10 Phút Bất Tử)</button>
+            <button class="btn-mode btn-survival" onclick="startGame('SURVIVAL')">⚡ SINH TỒN (Thử Thách 3 Mạng)</button>
+        </div>
+
+        <button class="btn-guide-corner" onclick="openGuideModal()">📜 HƯỚNG DẪN CHI TIẾT</button>
+    </div>
+
+    <!-- CUỘN GIẤY DA (GUIDE MODAL) -->
+    <div id="guide-modal" class="screen hidden" style="background: rgba(0,0,0,0.85); z-index:60;">
+        <div class="parchment">
+            <button class="btn-close-parchment" onclick="closeGuideModal()">X</button>
+            <h2>📜 Bí Kíp Phép Thuật Thập Phân</h2>
+            <p>🧹 <b>Cưỡi Chổi Bay:</b> Bấm liên tục chuột/Space/chạm màn hình để xả năng lượng bay lên. Thả ra sẽ rơi xuống.</p>
+            <p>🍬 <b>Kẹo Năng Lượng Thập Phân:</b> Có 3 viên kẹo chứa số thập phân. Chỉ 1 kẹo có đáp án đúng. Đâm sai sẽ bị trừ điểm/tim.</p>
+            <p>⏳ <b>Thời Gian Đọc Đề:</b> Vòng 1 có 4 giây đọc đề, giảm dần. Vòng 5 không có giây nào!</p>
+            <p>🧠 <b>Tư Duy Số Thập Phân:</b> Đề bài đa dạng (Nhân/chia 10, 100, 0,1; Diện tích tam giác, Dãy số quy luật thập phân, Tổng-Hiệu, Tổng-Tỉ...).</p>
+            <p>🛡️ <b>Vật Phẩm Hỗ Trợ:</b> Nhặt Sao (⭐) được +50 điểm. Nhặt Khiên (🛡️) để bảo vệ 1 lần đâm sai.</p>
+        </div>
+    </div>
+
+    <!-- KHUNG HỘI THOẠI CHUYỂN CẢNH (TRANSITION DIALOGUE) -->
+    <div id="dialogue-overlay" class="hidden">
+        <div class="dialogue-box">
+            <img src="thay-son-tung.png" class="dialogue-avatar" onerror="this.src='https://via.placeholder.com/150?text=Thay+Tung'">
+            <div class="dialogue-content">
+                <div class="dialogue-text" id="transition-text"></div>
+                <button class="btn-continue hidden" id="btn-resume">Tiếp tục bay 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HUD BAR (KHUNG HỎI CÂU HỎI MỚI) -->
+    <div id="hud-bar" class="hidden">
+        <div class="hud-item">
+            <span class="hud-label">Thời Gian</span>
+            <span id="hud-timer" class="hud-value">10:00</span>
+        </div>
+        <div class="hud-item" id="lives-box" style="display:none;">
+            <span class="hud-label">Mạng Sống</span>
+            <span id="hud-lives" class="hud-value">💖💖💖</span>
+        </div>
+        <div id="question-board">
+            <span id="reading-alert">⏳ ĐANG ĐỌC ĐỀ... ⏳</span>
+            <span id="round-indicator">VÒNG 1</span>
+            <div id="question-text">Đang tải phép toán thập phân...</div>
+            <div id="progress-indicator" style="position: absolute; bottom: 2px; right: 12px; font-size: 0.85rem; color: #e056fd; font-weight: bold;">Tiến độ: 0/3</div>
+        </div>
+        <div class="hud-item">
+            <span class="hud-label">Điểm Số</span>
+            <span id="hud-score" class="hud-value">0</span>
+        </div>
+        <div class="hud-controls">
+            <button class="btn-icon" onclick="toggleAudio()" id="btn-audio" title="Bật/Tắt Âm (BGM)">🔇</button>
+            <button class="btn-icon" onclick="exitToHome()" title="Quay Về">🏠</button>
+        </div>
+    </div>
+
+    <!-- CANVAS PLAY AREA -->
+    <div id="canvas-wrapper" class="hidden">
+        <canvas id="gameCanvas"></canvas>
+        <canvas id="fxCanvas" style="position: absolute; top:0; left:0; pointer-events: none; z-index:25;"></canvas>
+        <div id="mascot-container">
+            <div class="speech-bubble" id="mascot-speech">Khởi hành thôi các pháp sư nhí!</div>
+        </div>
+    </div>
+
+    <!-- END SCREEN -->
+    <div id="end-screen" class="screen hidden" style="background: rgba(0,0,0,0.9); z-index: 60;">
+        <div class="modal-box">
+            <h2 class="modal-title" id="end-title">🎉 HOÀN THÀNH CHUYẾN BAY 🎉</h2>
+            <p style="font-size:1.3rem;">Tổng điểm đạt được:</p>
+            <div id="final-score" style="font-size: 4.5rem; font-weight: 900; color: var(--vang-chanh); margin: 10px 0;">0</div>
+
+            <input type="text" id="player-name" class="name-input" placeholder="Nhập tên Pháp Sư..." maxlength="25">
+            <br>
+            <button class="btn-mode btn-classroom" onclick="saveScore()">🏆 GHI DANH BẢNG VÀNG</button>
+
+            <h3 style="color:var(--cam-dat); margin-top:25px;">🥇 TOP 5 PHÁP SƯ ĐỈNH CAO 🥇</h3>
+            <table class="leaderboard-table">
+                <tbody id="leaderboard-body"></tbody>
+            </table>
+            <button class="btn-mode btn-survival" onclick="resetToMenu()" style="margin-top:20px;">🔄 VỀ TRANG CHỦ</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ===================================================
+   KỊCH BẢN CHUYỂN CẢNH (STORYLINE)
+   =================================================== */
+const STORY_LINES = {
+    1: "Nguy to rồi! Các học trò cưng của thầy đang bị cuốn vào Chiều Không Gian Vô Cực! Thầy phải dùng chổi phép bay qua các Cổng Toán Học Thập Phân để cứu các con. Hãy giúp thầy điều khiển chổi nhé!",
+    2: "Chúng ta đang bay vào vùng nhiễu động! Các phép toán số thập phân sẽ xuất hiện nhanh hơn một chút. Các con chú ý quan sát quy luật và tính nhẩm nhé!",
+    3: "Trời đất tối sầm lại rồi! Thời gian dừng lại đọc đề sẽ bị rút ngắn đi. Mọi người tập trung cao độ, chuẩn bị áo choàng phép thuật nào!",
+    4: "Thầy nghe thấy tiếng các bạn học sinh rồi! Chỉ còn 1 giây để đọc đề thôi, hãy tin vào trực giác và phản xạ Toán thập phân của mình!",
+    5: "Nơi giam giữ đây rồi! Cảnh báo đỏ: Không còn thời gian nghỉ để đọc đề nữa! Bay tốc độ tối đa, đâm chớp nhoáng để phá vỡ phong ấn cứu các bạn ra nàooo!",
+    win: "Tuyệt vời! Thầy trò ta đã đoàn tụ an toàn. Các con thực sự là những Pháp sư Toán Thập Phân xuất sắc nhất của Học viện!"
+};
+
+/* ===================================================
+   WEB AUDIO API SOUND SYNTHESIZER
+   =================================================== */
+class SoundEngine {
+    constructor() { this.ctx = null; this.muted = true; }
+    init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+    
+    play(type, freqStart, freqEnd, duration, vol) {
+        if (this.muted || !this.ctx) return;
+        let osc = this.ctx.createOscillator(); let gain = this.ctx.createGain();
+        osc.type = type; osc.frequency.setValueAtTime(freqStart, this.ctx.currentTime);
+        if (freqEnd) osc.frequency.exponentialRampToValueAtTime(freqEnd, this.ctx.currentTime + duration);
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + duration);
+    }
+    playFlap() { this.play('sine', 150, 300, 0.15, 0.15); }
+    playCorrect() { 
+        if (this.muted || !this.ctx) return;
+        let now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+            let osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+            osc.type = 'triangle'; osc.frequency.value = f;
+            gain.gain.setValueAtTime(0.15, now + i*0.08); gain.gain.exponentialRampToValueAtTime(0.01, now + i*0.08 + 0.3);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(now + i*0.08); osc.stop(now + i*0.08 + 0.3);
+        });
+    }
+    playHit() { this.play('sawtooth', 150, 50, 0.4, 0.4); }
+    playStar() { this.play('sine', 800, 1200, 0.4, 0.3); }     
+    playShield() { this.play('square', 300, 600, 0.4, 0.3); }  
+    playShatter() { this.play('sawtooth', 500, 100, 0.5, 0.4); }
+    playLevelUp() { this.play('square', 400, 1200, 0.8, 0.3); } 
+}
+const audio = new SoundEngine();
+const bgmAudioElement = document.getElementById('bgm-audio');
+
+function toggleAudio() {
+    audio.init(); audio.muted = !audio.muted; bgmAudioElement.muted = audio.muted;
+    document.getElementById('btn-audio').innerText = audio.muted ? '🔇' : '🔊';
+    if (!audio.muted && gameState.active) bgmAudioElement.play().catch(e => console.log(e));
+    else bgmAudioElement.pause();
+}
+function openGuideModal() { document.getElementById('guide-modal').classList.remove('hidden'); }
+function closeGuideModal() { document.getElementById('guide-modal').classList.add('hidden'); }
+function exitToHome() { if(confirm("Trở về màn hình chính?")) { gameState.active = false; bgmAudioElement.pause(); resetToMenu(); } }
+
+/* ===================================================
+   HÀM XỬ LÝ LÀM TRÒN SỐ THẬP PHÂN CHUẨN XÁC
+   =================================================== */
+function cleanDec(val) {
+    return Math.round(val * 10000) / 10000;
+}
+
+/* ===================================================
+   NGÂN HÀNG ĐỀ MỚI - 12 DẠNG TOÁN SỐ THẬP PHÂN CHUYÊN SÂU
+   =================================================== */
+const QuestionGenerator = {
+    lastType: -1,
+    generate(round) {
+        let type;
+        const totalTypes = 12;
+        
+        do { type = Math.floor(Math.random() * totalTypes); } while (type === this.lastType);
+        this.lastType = type; 
+        
+        let q, ans;
+        let m = round;
+
+        switch (type) {
+            case 0: { // Tính nhẩm nhân/chia với 10, 100, 1000
+                let isMul = Math.random() < 0.5;
+                let factor = [10, 100, 1000][Math.floor(Math.random() * 3)];
+                let base = cleanDec((Math.floor(Math.random() * 890) + 110) / 10);
+                if (isMul) {
+                    q = `Tính nhẩm: ${base} × ${factor} = ?`;
+                    ans = cleanDec(base * factor);
+                } else {
+                    let baseDiv = cleanDec(base * (factor / 10));
+                    q = `Tính nhẩm: ${baseDiv} ÷ ${factor} = ?`;
+                    ans = cleanDec(baseDiv / factor);
+                }
+                break;
+            }
+            case 1: { // Tính nhẩm nhân/chia với 0,1; 0,01; 0,001
+                let isMul = Math.random() < 0.5;
+                let factorDec = [0.1, 0.01][Math.floor(Math.random() * 2)];
+                let base = cleanDec((Math.floor(Math.random() * 850) + 50) / 10);
+                if (isMul) {
+                    q = `Tính nhẩm: ${base} × ${factorDec} = ?`;
+                    ans = cleanDec(base * factorDec);
+                } else {
+                    q = `Tính nhẩm: ${base} ÷ ${factorDec} = ?`;
+                    ans = cleanDec(base / factorDec);
+                }
+                break;
+            }
+            case 2: { // Thủ thuật tính nhanh với số thập phân
+                let sub = Math.floor(Math.random() * 4);
+                if (sub === 0) {
+                    let a = cleanDec(Math.floor(Math.random() * 8) + 1 + 0.5);
+                    q = `Tính nhanh: ${a} × 2 = ?`;
+                    ans = cleanDec(a * 2);
+                } else if (sub === 1) {
+                    let a = cleanDec((Math.floor(Math.random() * 15) + 1) / 10);
+                    let b = cleanDec(10 - a);
+                    let c = cleanDec((Math.floor(Math.random() * 9) + 1) / 10);
+                    q = `Tính nhanh: ${a} + ${c} + ${b} = ?`;
+                    ans = cleanDec(a + b + c);
+                } else if (sub === 2) {
+                    q = `Tính nhanh: 2,5 × 0,4 = ?`;
+                    ans = 1;
+                } else {
+                    let a = cleanDec((Math.floor(Math.random() * 8) + 1) + 0.25);
+                    q = `Tính nhanh: ${a} × 4 = ?`;
+                    ans = cleanDec(a * 4);
+                }
+                break;
+            }
+            case 3: { // Diện tích hình tam giác
+                let a = [4, 6, 8, 10, 12, 5, 7, 9][Math.floor(Math.random() * 8)];
+                let h = cleanDec((Math.floor(Math.random() * 50) + 12) / 10);
+                q = `Tam giác đáy ${a}cm, cao ${h}cm. Diện tích = ? cm²`;
+                ans = cleanDec((a * h) / 2);
+                break;
+            }
+            case 4: { // Dãy số quy luật cấp số cộng thập phân
+                let start = cleanDec((Math.floor(Math.random() * 20) + 1) / 10);
+                let step = [0.2, 0.3, 0.5, 0.25, 0.4][Math.floor(Math.random() * 5)];
+                let t1 = start, t2 = cleanDec(start + step), t3 = cleanDec(start + 2*step);
+                q = `Quy luật: ${t1}, ${t2}, ${t3}, [?]`;
+                ans = cleanDec(start + 3*step);
+                break;
+            }
+            case 5: { // Dãy số quy luật gấp đôi thập phân
+                let start = [0.1, 0.2, 0.3, 0.5][Math.floor(Math.random() * 4)];
+                let t1 = start, t2 = cleanDec(start * 2), t3 = cleanDec(start * 4);
+                q = `Quy luật: ${t1}, ${t2}, ${t3}, [?]`;
+                ans = cleanDec(start * 8);
+                break;
+            }
+            case 6: { // Tìm 2 số biết Tổng và Hiệu hai số thập phân
+                let diff = cleanDec((Math.floor(Math.random() * 25) + 5) / 10);
+                let small = cleanDec((Math.floor(Math.random() * 50) + 10) / 10);
+                let large = cleanDec(small + diff);
+                let sumVal = cleanDec(small + large);
+                if (Math.random() < 0.5) {
+                    q = `Tổng = ${sumVal}, Hiệu = ${diff}. Tìm số LỚN?`;
+                    ans = large;
+                } else {
+                    q = `Tổng = ${sumVal}, Hiệu = ${diff}. Tìm số BÉ?`;
+                    ans = small;
+                }
+                break;
+            }
+            case 7: { // Tìm 2 số biết Tổng và Tỉ số hai số thập phân
+                let pairs = [[1,2], [1,3], [1,4], [2,3]];
+                let pair = pairs[Math.floor(Math.random() * pairs.length)];
+                let p1 = pair[0], p2 = pair[1];
+                let unit = cleanDec((Math.floor(Math.random() * 40) + 10) / 10);
+                let v1 = cleanDec(unit * p1), v2 = cleanDec(unit * p2);
+                let total = cleanDec(v1 + v2);
+                if (Math.random() < 0.5) {
+                    q = `Tổng = ${total}, tỉ số ${p1}/${p2}. Tìm số LỚN?`;
+                    ans = Math.max(v1, v2);
+                } else {
+                    q = `Tổng = ${total}, tỉ số ${p1}/${p2}. Tìm số BÉ?`;
+                    ans = Math.min(v1, v2);
+                }
+                break;
+            }
+            case 8: { // Tìm X với số thập phân
+                let add = cleanDec((Math.floor(Math.random() * 50) + 10) / 10);
+                let xVal = cleanDec((Math.floor(Math.random() * 50) + 10) / 10);
+                let sumX = cleanDec(add + xVal);
+                if (Math.random() < 0.5) {
+                    q = `Tìm X, biết: X + ${add} = ${sumX}`;
+                    ans = xVal;
+                } else {
+                    q = `Tìm X, biết: X - ${add} = ${sumX}`;
+                    ans = sumX;
+                }
+                break;
+            }
+            case 9: { // Phép cộng / trừ thập phân
+                let a = cleanDec((Math.floor(Math.random() * 80) + 10) / 10);
+                let b = cleanDec((Math.floor(Math.random() * 80) + 10) / 10);
+                if (Math.random() < 0.5) {
+                    q = `Tính: ${a} + ${b} = ?`;
+                    ans = cleanDec(a + b);
+                } else {
+                    let sum = cleanDec(a + b);
+                    q = `Tính: ${sum} - ${a} = ?`;
+                    ans = b;
+                }
+                break;
+            }
+            case 10: { // Phép nhân thập phân cơ bản
+                let a = cleanDec((Math.floor(Math.random() * 9) + 1) / 10);
+                let b = Math.floor(Math.random() * 8) + 2;
+                q = `Tính: ${a} × ${b} = ?`;
+                ans = cleanDec(a * b);
+                break;
+            }
+            case 11: { // Phép chia thập phân
+                let b = Math.floor(Math.random() * 4) + 2;
+                let targetAns = cleanDec((Math.floor(Math.random() * 80) + 10) / 10);
+                let total = cleanDec(targetAns * b);
+                q = `Tính: ${total} ÷ ${b} = ?`;
+                ans = targetAns;
+                break;
+            }
+        }
+
+        // Sinh 2 đáp án nhiễu thông minh
+        let opts = [ans];
+        let deltas = [0.1, -0.1, 0.2, -0.2, 0.5, -0.5, 1, -1, 0.01, -0.01];
+        
+        while (opts.length < 3) {
+            let d = deltas[Math.floor(Math.random() * deltas.length)];
+            let cand = cleanDec(ans + d);
+            if (cand > 0 && !opts.includes(cand)) {
+                opts.push(cand);
+            }
+        }
+        
+        opts.sort(() => Math.random() - 0.5);
+        
+        return { 
+            question: q, 
+            correct: ans, 
+            options: opts 
+        };
+    }
+};
+
+/* ===================================================
+   BIẾN TOÀN CỤC & TYPEWRITER
+   =================================================== */
+let canvas, ctx, fxCanvas, fxCtx;
+let gameState = {
+    active: false, paused: false, mode: 'CLASSROOM', score: 0, lives: 3, round: 1, timeRemaining: 600,
+    timerInterval: null, currentSeq: null,
+    player: { x: 150, y: 300, baseRadius: 22, vy: 0, gravity: 0.35, jump: -7.5, hasShield: false },
+    portals: [], items: [], spawnTimer: 0, spawnInterval: 140,
+    progressCurrent: 0, progressTarget: 3,
+    transitionTimer: 0, floatingMaths: [], floatingTexts: [], particles: [], endFxArray: [], isWin: false
+};
+
+const MASCOT_QUOTES = {
+    correct: ["Chính xác tuyệt đối!", "Con tính nhẩm thập phân thần tốc quá!", "Thầy rất tự hào về con!"],
+    wrong: ["Khoan đã! Kiểm tra lại dấu phẩy nhé!", "Bị giật điện rồi, chú ý tính toán lại nha!"],
+    hit: ["Trượt mất đáp án rồi!", "Cẩn thận mất điểm nhé!"],
+    star: ["+50 Điểm! Lượm sao thần kỳ!", "Tuyệt quá!"],
+    shield: ["KHIÊN BẢO VỆ KÍCH HOẠT! 🛡️", "Con đã an toàn 1 lượt rồi nhé!"],
+    shatter: ["Phù! May mà có Khiên!", "Khiên vỡ rồi, cẩn thận hơn nha!"],
+    change: ["Luân phiên dạng toán thập phân mới nào!", "Thời gian chill để phân tích đề nhé!"],
+    levelup: ["THĂNG CẤP! Mưa sao băng kìa!", "Vòng mới! Thầy mạnh mẽ hơn rồi!"],
+    ambient: ["Nhan 0,1 chính là chia cho 10 đó nha!", "Diện tích tam giác = (đáy × chiều cao) : 2!", "Dấu phẩy sang phải là nhân 10, sang trái là chia 10!"]
+};
+
+let mascotTimer;
+function triggerMascot(type) {
+    let list = MASCOT_QUOTES[type] || MASCOT_QUOTES.ambient;
+    let speech = document.getElementById('mascot-speech');
+    speech.innerText = list[Math.floor(Math.random() * list.length)];
+    speech.style.display = 'block';
+    speech.style.animation = 'none'; 
+    void speech.offsetHeight; 
+    speech.style.animation = 'popIn 0.3s forwards';
+
+    clearTimeout(mascotTimer);
+    mascotTimer = setTimeout(() => {
+        speech.style.animation = 'fadeOutMascot 0.3s forwards';
+        setTimeout(() => { speech.style.display = 'none'; }, 300);
+    }, 3000); 
+}
+
+/* HIỆU ỨNG TYPEWRITER */
+let typeWriterTimeout;
+function typeWriter(elementId, text, speed, onComplete) {
+    let el = document.getElementById(elementId);
+    el.innerHTML = ""; let i = 0; clearTimeout(typeWriterTimeout);
+    function type() {
+        if (i < text.length) {
+            el.innerHTML += text.charAt(i); i++; typeWriterTimeout = setTimeout(type, speed);
+        } else if (onComplete) onComplete();
+    }
+    type();
+}
+
+window.addEventListener('load', () => {
+    canvas = document.getElementById('gameCanvas'); ctx = canvas.getContext('2d');
+    fxCanvas = document.getElementById('fxCanvas'); fxCtx = fxCanvas.getContext('2d');
+    const resize = () => { 
+        if(canvas.parentElement) {
+            canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; 
+            fxCanvas.width = canvas.width; fxCanvas.height = canvas.height;
+        }
+    };
+    resize(); window.addEventListener('resize', resize);
+    
+    typeWriter("intro-text", "Chào mừng các pháp sư toán học trẻ tuổi! Hãy cùng thầy chinh phục bầu trời tri thức Số Thập Phân. Các em đã sẵn sàng chưa?", 50);
+    requestAnimationFrame(bgAnimationLoop);
+});
+
+function bgAnimationLoop() {
+    if(!gameState.active) {
+        if (Math.random() < 0.05) gameState.floatingMaths.push(new FloatingMathSymbol());
+        for (let i = gameState.floatingMaths.length - 1; i >= 0; i--) {
+            let fm = gameState.floatingMaths[i]; fm.update();
+            if (fm.x < -50) gameState.floatingMaths.splice(i, 1);
+        }
+        requestAnimationFrame(bgAnimationLoop);
+    }
+}
+
+function showModeSelection() {
+    document.getElementById('btn-main-start').classList.add('hidden');
+    document.getElementById('mode-selection').classList.remove('hidden');
+}
+
+const doFlap = () => {
+    if (!gameState.active || gameState.paused) return;
+    gameState.player.vy = gameState.player.jump;
+    audio.playFlap();
+    let r = gameState.player.baseRadius + (gameState.round-1)*2;
+    for(let i=0; i<4; i++) gameState.particles.push(new Particle(gameState.player.x - r*2, gameState.player.y, '#f1c40f', 'magic'));
+};
+window.addEventListener('mousedown', (e) => { if(e.target.tagName !== 'BUTTON') doFlap(); });
+window.addEventListener('touchstart', (e) => { if(e.target.tagName !== 'BUTTON') doFlap(); }, {passive: false});
+window.addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preventDefault(); doFlap(); } });
+
+/* --- VẼ THẦY SƠN TÙNG PHÁP SƯ CƯỠI CHỔI --- */
+function drawVectorChibi(x, y, vy, round, hasShield) {
+    let r = gameState.player.baseRadius + (round - 1) * 2; 
+    ctx.save(); ctx.translate(x, y);
+    let rot = Math.min(Math.PI/4, Math.max(-Math.PI/4, vy * 0.08)); ctx.rotate(rot);
+
+    if(hasShield) {
+        ctx.beginPath(); ctx.arc(0, -r*0.5, r*2.2, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(52, 152, 219, 0.4)'; ctx.fill();
+        ctx.lineWidth = 3; ctx.strokeStyle = '#3498db'; ctx.stroke();
+    }
+
+    ctx.fillStyle = '#8B4513'; ctx.fillRect(-r*1.8, 0, r*3.5, r*0.3); // Cán
+    ctx.fillStyle = '#DAA520'; ctx.beginPath(); ctx.moveTo(-r*1.5, 0); ctx.lineTo(-r*2.5, -r*0.5); ctx.lineTo(-r*2.5, r*0.8); ctx.fill(); // Đuôi
+    
+    if (vy < 0) { ctx.fillStyle = '#e056fd'; ctx.beginPath(); ctx.arc(-r*2.5, r*0.15, r*0.4, 0, Math.PI*2); ctx.fill(); }
+
+    ctx.fillStyle = '#111'; ctx.fillRect(-r*0.2, -r*0.2, r*0.4, r*0.8);
+
+    if (round >= 3) {
+        ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.moveTo(0, -r); ctx.lineTo(-r*1.5, -r*0.2); ctx.lineTo(-r*1.2, r*0.5); ctx.fill();
+    }
+
+    ctx.fillStyle = '#232b3e'; ctx.fillRect(-r*0.6, -r*1.2, r*1.2, r*1.2);
+    ctx.fillStyle = '#e74c3c'; ctx.fillRect(-r*0.1, -r*1.1, r*0.2, r*0.6);
+    ctx.fillStyle = '#f3d0b1'; ctx.beginPath(); ctx.arc(r*0.8, -r*0.3, r*0.2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.fillRect(r*0.7, -r*0.6, r*0.2, r*0.5); 
+    ctx.fillStyle = '#f3d0b1'; ctx.beginPath(); ctx.arc(0, -r*1.6, r*0.9, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(0, -r*1.8, r*0.95, Math.PI, 0); ctx.fill();
+
+    ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(-r*0.3, -r*1.6, r*0.25, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(r*0.3, -r*1.6, r*0.25, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle = '#2c3e50'; ctx.beginPath(); ctx.arc(-r*0.3, -r*1.6, r*0.1, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(r*0.3, -r*1.6, r*0.1, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -r*1.2, r*0.15, 0.2, Math.PI - 0.2); ctx.strokeStyle = '#e74c3c'; ctx.stroke();
+
+    if (round >= 5) {
+        ctx.fillStyle = '#8e44ad'; ctx.beginPath(); ctx.moveTo(-r*1.2, -r*2.5); ctx.lineTo(r*1.2, -r*2.5); ctx.lineTo(0, -r*4); ctx.fill();
+        ctx.fillStyle = '#f1c40f'; ctx.fillRect(-r*1.2, -r*2.5, r*2.4, r*0.2);
+    }
+    ctx.restore();
+}
+
+/* --- CÁC CLASS ĐỒ HỌA TRÒ CHƠI --- */
+const CANDY_COLORS = [
+    { start: '#FF5E7E', end: '#E91E63', border: '#C2185B' }, { start: '#FFB800', end: '#FF8A00', border: '#E65100' },
+    { start: '#32C5FF', end: '#007CEE', border: '#0256A3' }, { start: '#48E074', end: '#14A745', border: '#0B7A2F' },
+    { start: '#D57BFF', end: '#8B21FF', border: '#5E00D4' }
+];
+
+class MagicalPortalWall {
+    constructor() {
+        this.x = canvas.width + 50; this.width = 110; this.passed = false;
+        this.portalH = 90; this.spacing = 35; 
+        let blockH = this.portalH * 3 + this.spacing * 2;
+        this.topY = Math.random() * Math.max(10, canvas.height - blockH - 40) + 20;
+        let options = gameState.currentSeq.options;
+        let c1 = CANDY_COLORS[Math.floor(Math.random()*CANDY_COLORS.length)];
+        let c2 = CANDY_COLORS[Math.floor(Math.random()*CANDY_COLORS.length)];
+        let c3 = CANDY_COLORS[Math.floor(Math.random()*CANDY_COLORS.length)];
+        this.portals = [
+            { y: this.topY, val: options[0], isCorrect: options[0] === gameState.currentSeq.correct, color: c1 },
+            { y: this.topY + this.portalH + this.spacing, val: options[1], isCorrect: options[1] === gameState.currentSeq.correct, color: c2 },
+            { y: this.topY + (this.portalH + this.spacing)*2, val: options[2], isCorrect: options[2] === gameState.currentSeq.correct, color: c3 }
+        ];
+    }
+    update(speed) { this.x -= speed; }
+    draw() {
+        ctx.save();
+        let colGrad = ctx.createLinearGradient(this.x, 0, this.x+this.width, 0);
+        colGrad.addColorStop(0, 'rgba(255,255,255,0)'); colGrad.addColorStop(0.5, 'rgba(255,255,255,0.1)'); colGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = colGrad; ctx.fillRect(this.x, 0, this.width, canvas.height);
+        
+        this.portals.forEach(p => {
+            let cx = this.x + this.width/2; let cy = p.y + this.portalH/2;
+            let w = this.width - 20; let h = this.portalH;
+            let cObj = (p.isCorrect && this.passed) ? CANDY_COLORS[3] : p.color;
+            ctx.beginPath(); ctx.roundRect(cx - w/2, cy - h/2, w, h, 30);
+            let grad = ctx.createLinearGradient(cx, cy - h/2, cx, cy + h/2);
+            grad.addColorStop(0, cObj.start); grad.addColorStop(1, cObj.end);
+            ctx.fillStyle = grad; ctx.fill();
+            ctx.lineWidth = 4; ctx.strokeStyle = cObj.border;
+            ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5; ctx.stroke();
+            ctx.shadowColor = 'transparent'; ctx.beginPath(); ctx.ellipse(cx, cy - h/3, w*0.35, h*0.12, 0, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
+            
+            // TỰ ĐỘNG CO GIÃN FONT CHỮ THEO ĐỘ DÀI SỐ THẬP PHÂN
+            let strVal = String(p.val);
+            let fontSize = strVal.length > 6 ? 22 : (strVal.length > 4 ? 26 : 32);
+            ctx.fillStyle = '#fff'; ctx.font = `900 ${fontSize}px Nunito`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
+            ctx.fillText(strVal, cx, cy);
+        });
+        ctx.restore();
+    }
+}
+
+class BonusItem {
+    constructor() {
+        this.type = Math.random() > 0.5 ? 'star' : 'shield';
+        this.x = canvas.width + 100; this.y = Math.random() * (canvas.height - 200) + 100;
+        this.radius = 20; this.vy = (Math.random()-0.5)*2; this.collected = false;
+    }
+    update(speed) { this.x -= speed; this.y += this.vy; if(this.y<50 || this.y>canvas.height-50) this.vy*=-1; }
+    draw() {
+        if(this.collected) return;
+        ctx.save(); ctx.translate(this.x, this.y);
+        ctx.shadowColor = this.type==='star'?'#f1c40f':'#3498db'; ctx.shadowBlur = 15;
+        ctx.font = '35px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(this.type==='star'?'⭐':'🛡️', 0, 0); ctx.restore();
+    }
+}
+
+class Particle {
+    constructor(x,y,color, type='normal') {
+        this.x=x; this.y=y; this.color=color; this.type = type;
+        if (type === 'meteor') { this.radius = Math.random()*3+2; this.vx = -(Math.random()*15 + 15); this.vy = Math.random()*15 + 15; this.decay = 0.015; } 
+        else if (type === 'magic') { this.radius = Math.random()*3+1; this.vx = -Math.random()*5; this.vy = (Math.random()-0.5)*2; this.decay = 0.05; } 
+        else { this.radius = Math.random()*5+2; this.vx = (Math.random()-0.5)*10; this.vy = (Math.random()-0.5)*10; this.decay = Math.random()*0.02+0.02; }
+        this.alpha = 1;
+    }
+    update() { this.x+=this.vx; this.y+=this.vy; this.alpha-=this.decay; }
+    draw() { 
+        ctx.save(); ctx.globalAlpha=Math.max(0,this.alpha); 
+        if(this.type === 'meteor') {
+            ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x - this.vx*2, this.y - this.vy*2);
+            ctx.strokeStyle = this.color; ctx.lineWidth = this.radius; ctx.lineCap = 'round';
+            ctx.shadowColor = this.color; ctx.shadowBlur = 10; ctx.stroke();
+        } else {
+            ctx.beginPath(); ctx.arc(this.x,this.y,this.radius,0,Math.PI*2); ctx.fillStyle=this.color; ctx.fill(); 
+        }
+        ctx.restore(); 
+    }
+}
+
+class FloatingMathSymbol {
+    constructor() {
+        this.x = canvas.width + 50; this.y = Math.random() * canvas.height;
+        this.sym = ['+', '-', '×', '÷', '=', ',', '0,1', '0,01'][Math.floor(Math.random()*8)];
+        this.color = ['rgba(241,196,15,0.4)','rgba(46,204,113,0.4)','rgba(52,152,219,0.4)'][Math.floor(Math.random()*3)];
+        this.vy = (Math.random()-0.5); this.speed = Math.random()*2 + 1;
+    }
+    update() { this.x -= this.speed; this.y += this.vy; }
+    draw() { ctx.save(); ctx.fillStyle = this.color; ctx.font = '900 36px Patrick Hand'; ctx.fillText(this.sym, this.x, this.y); ctx.restore(); }
+}
+
+class FloatingText {
+    constructor(x, y, text, color, isGiant = false) { 
+        this.x = x; this.y = y; this.text = text; this.color = color; this.alpha = 1; this.vy = isGiant ? -0.5 : -2.5; this.isGiant = isGiant;
+    }
+    update() { this.y += this.vy; this.alpha -= (this.isGiant ? 0.008 : 0.02); }
+    draw() {
+        ctx.save(); ctx.globalAlpha = Math.max(0, this.alpha); ctx.font = this.isGiant ? '900 60px Nunito' : '900 32px Nunito'; 
+        ctx.textAlign = 'center'; ctx.strokeStyle = '#000'; ctx.lineWidth= this.isGiant ? 8 : 4;
+        ctx.strokeText(this.text, this.x, this.y); ctx.fillStyle = this.color; ctx.fillText(this.text, this.x, this.y); ctx.restore();
+    }
+}
+
+class Confetti {
+    constructor() {
+        this.x = Math.random() * fxCanvas.width; this.y = fxCanvas.height + 10;
+        this.color = ['#f1c40f', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6'][Math.floor(Math.random()*5)];
+        this.vx = (Math.random() - 0.5) * 10; this.vy = -(Math.random() * 15 + 10);
+        this.w = Math.random()*15 + 5; this.h = Math.random()*15 + 5;
+        this.rot = Math.random()*Math.PI; this.vRot = (Math.random()-0.5)*0.2;
+    }
+    update() { this.x+=this.vx; this.y+=this.vy; this.vy+=0.5; this.rot+=this.vRot; }
+    draw() { fxCtx.save(); fxCtx.translate(this.x, this.y); fxCtx.rotate(this.rot); fxCtx.fillStyle=this.color; fxCtx.fillRect(-this.w/2, -this.h/2, this.w, this.h); fxCtx.restore(); }
+}
+class Rain {
+    constructor() { this.x = Math.random() * fxCanvas.width; this.y = -20; this.vy = Math.random()*10 + 10; this.l = Math.random()*20 + 10; }
+    update() { this.y+=this.vy; }
+    draw() { fxCtx.beginPath(); fxCtx.moveTo(this.x, this.y); fxCtx.lineTo(this.x, this.y+this.l); fxCtx.strokeStyle='rgba(150,150,150,0.5)'; fxCtx.lineWidth=2; fxCtx.stroke(); }
+}
+
+/* ===================================================
+   HỆ THỐNG CHUYỂN CẢNH (TRANSITION SYSTEM)
+   =================================================== */
+function triggerTransition(roundStr) {
+    gameState.paused = true;
+    let overlay = document.getElementById('dialogue-overlay');
+    overlay.classList.remove('hidden');
+    let btnResume = document.getElementById('btn-resume');
+    btnResume.classList.add('hidden');
+    
+    let text = STORY_LINES[roundStr] || "Tiến lên nào!";
+    
+    if (roundStr === 'win') {
+        btnResume.innerText = "Xem Bảng Vàng 🏆";
+        typeWriter("transition-text", text, 40, () => {
+            btnResume.classList.remove('hidden');
+            btnResume.onclick = () => { 
+                overlay.classList.add('hidden'); 
+                endGame(true); 
+            };
+        });
+    } else {
+        typeWriter("transition-text", text, 40, () => {
+            setTimeout(() => {
+                resumeGame(roundStr);
+            }, 3000);
+        });
+    }
+}
+
+function resumeGame(roundNum) {
+    let overlay = document.getElementById('dialogue-overlay');
+    let dialogBox = document.querySelector('.dialogue-box');
+    
+    dialogBox.classList.add('fade-out');
+    overlay.classList.add('hidden');
+    
+    setTimeout(() => {
+        dialogBox.classList.remove('fade-out');
+        document.getElementById('transition-text').innerHTML = "";
+        
+        gameState.paused = false;
+        changeQuestion();
+        
+        if(!gameState.timerInterval) {
+            gameState.timerInterval = setInterval(tick, 1000);
+        }
+    }, 500);
+}
+
+/* ===================================================
+   GAME LOOP VÀ XỬ LÝ VA CHẠM
+   =================================================== */
+function gameLoop() {
+    if (!gameState.active) { drawEndFx(); return; }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (Math.random() < (gameState.paused ? 0.02 : 0.05)) gameState.floatingMaths.push(new FloatingMathSymbol());
+    for (let i = gameState.floatingMaths.length - 1; i >= 0; i--) {
+        let fm = gameState.floatingMaths[i]; fm.update(); fm.draw();
+        if (fm.x < -50) gameState.floatingMaths.splice(i, 1);
+    }
+
+    if (gameState.paused) {
+        drawVectorChibi(gameState.player.x, gameState.player.y + Math.sin(Date.now()/200)*10, 0, gameState.round, gameState.player.hasShield);
+        gameState.portals.forEach(wall => wall.draw());
+        gameState.items.forEach(it => it.draw());
+        gameState.particles.forEach(pt => { pt.update(); pt.draw(); });
+        gameState.floatingTexts.forEach(ft => { ft.update(); ft.draw(); });
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+
+    let p = gameState.player; let speed = 2.8 + (gameState.round - 1) * 0.4;
+    p.vy += p.gravity; p.y += p.vy;
+
+    let currentRadius = p.baseRadius + (gameState.round - 1) * 2;
+
+    if (p.y - currentRadius < 0) { p.y = currentRadius; p.vy = 0; }
+    if (p.y + currentRadius > canvas.height) { handleCollision("Rơi chạm đất!"); p.y = canvas.height/2; p.vy = 0; }
+
+    drawVectorChibi(p.x, p.y, p.vy, gameState.round, p.hasShield);
+
+    if (gameState.transitionTimer > 0) {
+        gameState.transitionTimer--;
+        if (gameState.transitionTimer === 0) document.getElementById('reading-alert').style.display = 'none';
+    } else {
+        gameState.spawnTimer++;
+        if (gameState.spawnTimer > gameState.spawnInterval) {
+            gameState.portals.push(new MagicalPortalWall());
+            if(Math.random() < 0.3) gameState.items.push(new BonusItem());
+            gameState.spawnTimer = 0;
+        }
+    }
+
+    let pBox = { left: p.x - currentRadius*0.8, right: p.x + currentRadius*0.8, top: p.y - currentRadius*0.8, bottom: p.y + currentRadius*0.8 };
+
+    for (let i = gameState.portals.length - 1; i >= 0; i--) {
+        let wall = gameState.portals[i]; wall.update(speed); wall.draw();
+
+        if (!wall.passed) {
+            let hitGate = null;
+            wall.portals.forEach(g => {
+                let cx = wall.x + wall.width/2; let cy = g.y + wall.portalH/2;
+                let w = wall.width - 20; let h = wall.portalH;
+                if (pBox.right > cx - w/2 && pBox.left < cx + w/2 && pBox.bottom > cy - h/2 && pBox.top < cy + h/2) {
+                    hitGate = g;
+                }
+            });
+
+            if (hitGate) {
+                wall.passed = true;
+                if (hitGate.val === gameState.currentSeq.correct) {
+                    audio.playCorrect(); gameState.score += 20;
+                    gameState.floatingTexts.push(new FloatingText(p.x, p.y, "+20Đ!", "#27ae60"));
+                    for(let k=0;k<15;k++) gameState.particles.push(new Particle(p.x, p.y, '#e056fd'));
+                    triggerMascot('correct');
+                    
+                    gameState.progressCurrent++;
+                    if(gameState.progressCurrent >= gameState.progressTarget) changeQuestion();
+                    else updateHUD();
+                } else {
+                    handleCollision("Sai đáp án!");
+                }
+            } else if (wall.x + wall.width < p.x - currentRadius) {
+                wall.passed = true; handleCollision("Trượt kẹo rồi!");
+            }
+        }
+        if (wall.x < -150) gameState.portals.splice(i, 1);
+    }
+
+    for (let i = gameState.items.length - 1; i >= 0; i--) {
+        let it = gameState.items[i]; it.update(speed); it.draw();
+        if (!it.collected && Math.hypot(p.x - it.x, p.y - it.y) < currentRadius + it.radius) {
+            it.collected = true;
+            if(it.type === 'star') {
+                audio.playStar(); gameState.score += 50; updateHUD();
+                gameState.floatingTexts.push(new FloatingText(p.x, p.y, "+50Đ", "#f1c40f")); triggerMascot('star');
+            } else {
+                audio.playShield(); p.hasShield = true;
+                gameState.floatingTexts.push(new FloatingText(p.x, p.y, "KHIÊN!", "#3498db")); triggerMascot('shield');
+            }
+            for(let k=0;k<15;k++) gameState.particles.push(new Particle(p.x, p.y, it.type==='star'?'#f1c40f':'#3498db'));
+        }
+        if (it.x < -50 || it.collected) gameState.items.splice(i, 1);
+    }
+
+    for (let i = gameState.particles.length - 1; i >= 0; i--) {
+        let pt = gameState.particles[i]; pt.update(); pt.draw();
+        if (pt.alpha <= 0) gameState.particles.splice(i, 1);
+    }
+    for (let i = gameState.floatingTexts.length - 1; i >= 0; i--) {
+        let ft = gameState.floatingTexts[i]; ft.update(); ft.draw();
+        if (ft.alpha <= 0) gameState.floatingTexts.splice(i, 1);
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+function handleCollision(reason) {
+    let p = gameState.player;
+    if (p.hasShield) {
+        audio.playShatter(); p.hasShield = false;
+        gameState.floatingTexts.push(new FloatingText(p.x, p.y, "VỠ KHIÊN!", "#3498db")); triggerMascot('shatter');
+        for(let k=0;k<20;k++) gameState.particles.push(new Particle(p.x, p.y, '#3498db'));
+        return;
+    }
+    audio.playHit();
+    gameState.floatingTexts.push(new FloatingText(p.x, p.y, reason, "#e74c3c"));
+    for(let k=0;k<15;k++) gameState.particles.push(new Particle(p.x, p.y, '#e74c3c'));
+    
+    let container = document.getElementById('game-container');
+    container.classList.remove('shake-active'); void container.offsetWidth; container.classList.add('shake-active');
+
+    if (gameState.mode === 'SURVIVAL') {
+        gameState.lives--; updateHUD(); triggerMascot('wrong');
+        if (gameState.lives <= 0) endGame(false);
+    } else {
+        gameState.score = Math.max(0, gameState.score - 10); updateHUD(); triggerMascot('hit');
+    }
+}
+
+function changeQuestion() {
+    audio.playLevelUp(); triggerMascot('change');
+    gameState.portals = []; gameState.items = [];
+    gameState.progressCurrent = 0; gameState.progressTarget = 2 + gameState.round;
+    gameState.currentSeq = QuestionGenerator.generate(gameState.round);
+    document.getElementById('question-text').innerHTML = gameState.currentSeq.question;
+    updateHUD();
+    
+    let breakFrames = Math.max(0, (5 - gameState.round) * 60);
+    gameState.transitionTimer = breakFrames;
+    if (breakFrames > 0) { document.getElementById('reading-alert').style.display = 'block'; } 
+    else { document.getElementById('reading-alert').style.display = 'none'; }
+}
+
+function triggerMeteorShower() {
+    audio.playLevelUp(); triggerMascot('levelup');
+    gameState.floatingTexts.push(new FloatingText(canvas.width/2, canvas.height/2, `THĂNG CẤP VÒNG ${gameState.round}!`, "#f1c40f", true));
+    for(let i=0; i<40; i++) {
+        gameState.particles.push(new Particle(
+            Math.random()*canvas.width + canvas.width/2, -Math.random()*canvas.height, 
+            ['#f1c40f', '#e74c3c', '#ffffff'][Math.floor(Math.random()*3)], 'meteor'
+        ));
+    }
+}
+
+function startGame(selectedMode) {
+    audio.init(); gameState.mode = selectedMode; gameState.active = true; gameState.paused = true;
+    gameState.score = 0; gameState.lives = 3; gameState.round = 1; gameState.timeRemaining = 600;
+    gameState.portals = []; gameState.items = []; gameState.floatingTexts = []; gameState.particles = []; gameState.endFxArray = [];
+    gameState.floatingMaths = [];
+    gameState.player.y = canvas.height / 2; gameState.player.vy = 0; gameState.player.hasShield = false;
+    
+    canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; 
+    fxCanvas.width = canvas.width; fxCanvas.height = canvas.height;
+
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('hud-bar').classList.remove('hidden');
+    document.getElementById('canvas-wrapper').classList.remove('hidden');
+    document.getElementById('end-screen').classList.add('hidden');
+    document.getElementById('lives-box').style.display = selectedMode === 'SURVIVAL' ? 'flex' : 'none';
+
+    QuestionGenerator.lastType = -1;
+    clearInterval(gameState.timerInterval);
+    
+    if(!audio.muted) bgmAudioElement.play().catch(e=>console.log(e));
+    
+    requestAnimationFrame(gameLoop); 
+    
+    setTimeout(() => {
+        triggerTransition(1);
+    }, 1500);
+}
+
+function tick() {
+    if (gameState.paused) return;
+    gameState.timeRemaining--; updateHUD();
+    let elapsed = 600 - gameState.timeRemaining, oldR = gameState.round;
+    if (elapsed < 120) gameState.round = 1; else if (elapsed < 240) gameState.round = 2;
+    else if (elapsed < 360) gameState.round = 3; else if (elapsed < 480) gameState.round = 4;
+    else gameState.round = 5;
+
+    if (oldR !== gameState.round) {
+        document.getElementById('round-indicator').innerText = `VÒNG ${gameState.round}`;
+        gameState.spawnInterval = Math.max(90, 140 - (gameState.round-1)*12);
+        if (gameState.round === 5) document.getElementById('game-container').classList.add('red-alarm-mode');
+        triggerMeteorShower();
+        triggerTransition(gameState.round);
+    }
+    if (gameState.timeRemaining <= 0) {
+        clearInterval(gameState.timerInterval);
+        triggerTransition('win');
+    }
+}
+
+function updateHUD() {
+    let m = Math.floor(gameState.timeRemaining / 60), s = gameState.timeRemaining % 60;
+    document.getElementById('hud-timer').innerText = `${m}:${s<10?'0':''}${s}`;
+    document.getElementById('hud-score').innerText = gameState.score;
+    document.getElementById('hud-lives').innerText = '💖'.repeat(gameState.lives) || '💀';
+    document.getElementById('progress-indicator').innerText = `Tiến độ: ${gameState.progressCurrent}/${gameState.progressTarget}`;
+}
+
+function endGame(win) {
+    gameState.active = false; clearInterval(gameState.timerInterval); bgmAudioElement.pause();
+    gameState.isWin = win;
+    document.getElementById('hud-bar').classList.add('hidden');
+    document.getElementById('canvas-wrapper').classList.add('hidden');
+    document.getElementById('end-screen').classList.remove('hidden');
+    document.getElementById('end-title').innerText = win ? "🎉 HOÀN THÀNH XUẤT SẮC 🎉" : "⚡ HẾT TIM RỒI ⚡";
+    document.getElementById('final-score').innerText = gameState.score;
+    loadLeaderboard();
+    requestAnimationFrame(drawEndFx);
+}
+
+function drawEndFx() {
+    fxCtx.clearRect(0,0,fxCanvas.width,fxCanvas.height);
+    if (gameState.isWin) { if(Math.random()<0.1) gameState.endFxArray.push(new Confetti()); } 
+    else { if(Math.random()<0.3) gameState.endFxArray.push(new Rain()); }
+    
+    for(let i=gameState.endFxArray.length-1; i>=0; i--) {
+        let p = gameState.endFxArray[i]; p.update(); p.draw();
+        if(p.y > fxCanvas.height+50) gameState.endFxArray.splice(i,1);
+    }
+    if(!gameState.active && !document.getElementById('end-screen').classList.contains('hidden')) {
+        requestAnimationFrame(drawEndFx);
+    }
+}
+
+function saveScore() {
+    let n = document.getElementById('player-name').value.trim(); if (!n) return alert("Xin hãy nhập tên của con!");
+    let b = JSON.parse(localStorage.getItem('tst_magic_board') || '[]');
+    b.push({ name: n, score: gameState.score }); b.sort((x, y) => y.score - x.score); b = b.slice(0, 5);
+    localStorage.setItem('tst_magic_board', JSON.stringify(b)); loadLeaderboard(); alert("Vinh danh thành công!");
+}
+
+function loadLeaderboard() {
+    let b = JSON.parse(localStorage.getItem('tst_magic_board') || '[]'), tb = document.getElementById('leaderboard-body'); tb.innerHTML = '';
+    if (!b.length) { tb.innerHTML = '<tr><td colspan="3">Chưa có kỷ lục nào!</td></tr>'; return; }
+    b.forEach((i, x) => { tb.innerHTML += `<tr><td>${['🥇','🥈','🥉','4️⃣','5️⃣'][x]}</td><td style="color:var(--vang-chanh);font-weight:900;">${i.name}</td><td style="font-weight:bold;">${i.score}</td></tr>`; });
+}
+
+function resetToMenu() {
+    document.getElementById('game-container').classList.remove('red-alarm-mode');
+    document.getElementById('end-screen').classList.add('hidden');
+    document.getElementById('btn-main-start').classList.remove('hidden');
+    document.getElementById('mode-selection').classList.add('hidden');
+    document.getElementById('start-screen').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
